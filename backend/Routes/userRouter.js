@@ -13,9 +13,11 @@ const {
 const multer = require("multer");
 const path = require("path");
 const fs =require('fs');
-const { adminLogin } = require("../Controllers/AdminController");
 const {loginValidation, registerValidator, editorValidator} = require('../helper/validation')
-const  {protect} =require('../middleware/authMiddleware')
+const protect = require('../middleware/authMiddleware');
+
+
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -39,13 +41,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post("/register", upload.single("pic"),registerValidator, registerUser);
-router.get("/getData/:id", userProfile);
-router.post("/editprofile", upload.single("pic"), editorValidator, editProfile);
-router.get("/logout", userLogout);
-// router.post("/adminLoginpage", adminLogin)
 router.post("/login", loginValidation, authUser);
- 
+
+router.get("/getData", protect, userProfile);
+router.post("/editprofile",protect,upload.single("pic"),editorValidator,editProfile);
+router.get("/logout", userLogout); 
+
 
  
  module.exports=router
+
+
+
+
  

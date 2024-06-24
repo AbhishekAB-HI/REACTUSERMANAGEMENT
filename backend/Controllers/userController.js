@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 const cloudinary = require("../Cloudinary");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
-const generateTocken = require('../utils/TockenGenerate')
+const generateTocken = require('../utils/generateToken')
 
 const router = express.Router();
 const storage = multer.memoryStorage(); 
@@ -42,7 +42,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
    await user.save();
    if(user){
-      
+     const accessToken = await generateTocken({ user: user._id });
        let value = res.status(200).json({ success: true }); 
    }
   }catch(error){
@@ -103,10 +103,8 @@ const authUser = asyncHandler(async (req, res) => {
       .status(200)
       .json({ success: false, message: "Invalid Username or Password" });
   }
-  const accessToken = await generateAccessToken({ user: user._id });
- 
-
-  res.status(200).json({ success: true});
+  const accessToken = await generateTocken({ user: user._id });
+  res.status(200).json({ success: true,accessToken,userDetails: user});
       
     } catch (error) {
       console.log(error.message);
@@ -116,7 +114,7 @@ const authUser = asyncHandler(async (req, res) => {
  
  const userProfile= async (req,res)=>{
     try {
-      const userid =req.params.id;
+       const userid = req.user._id ||"";
        const userData=   await User.findOne({ _id: userid });
         return res.json(userData);
     } catch (error) {
@@ -128,8 +126,9 @@ const editProfile = async (req, res) => {
 
   try {
 
-    const { name, email, password, id } = req.body;
-    const emailexisit = await User.findOne({email:email})
+    const { name, email, password } = req.body;
+     const id = req.user._id || "";
+  
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(200).json({
@@ -144,6 +143,8 @@ const editProfile = async (req, res) => {
   const hashpassword = await bcrypt.hash(password, 10);
     const result = await cloudinary.uploader.upload(req.file.path);
     const user = await User.findById(id);
+
+    console.log(user,'modifirwddqd');
 
     user.name = name;
     user.email = email;
@@ -166,12 +167,11 @@ const editProfile = async (req, res) => {
 
  const userLogout=(req,res)=>{
    try {
-
     res.cookie('jwt','',{
       httpOnly:true,
       expires:new Date(0)
-
     })
+    
    return res.status(200).json({ success:true });
 
    } catch (error) {

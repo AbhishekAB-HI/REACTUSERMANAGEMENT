@@ -10,11 +10,11 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
+   
     },
     password: {
       type: String,
-      required: true,
+      required: true, 
     },
     profilePic: {
       type: String,
@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+    isBlocked:{
+      type:Boolean,
+      default:false
+    }
   },
   {
     timestamps: true,

@@ -4,34 +4,35 @@ const jwt = require("jsonwebtoken");
 const bcrypt=require("bcryptjs");
 const { validationResult } = require("express-validator");
 const cloudinary = require("../Cloudinary");
+const generateAdminTocken = require("../utils/generateAdminTocken");
 
 
  
 
 
-const generateAccessToken = async (user) => {
-  try {
-    return jwt.sign(user, "my_admin_key_token", { expiresIn: "2h" });
-  } catch (error) {
-    console.error("Error generating token:", error);
-    throw new Error("Token generation failed");
-  }
-};
+// const generateAccessToken = async (user) => {
+//   try {
+//     return jwt.sign(user, "my_admin_key_token", { expiresIn: "2h" });
+//   } catch (error) {
+//     console.error("Error generating token:", error);
+//     throw new Error("Token generation failed");
+//   }
+// };
 
 
-const generateRefreshToken = async (user) => {
-  try {
-    return jwt.sign(user, "my_admin_key_token", { expiresIn: "1y" });
-  } catch (error) {
-    console.error("Error generating token:", error);
-    throw new Error("Token generation failed");
-  }
-};
+// const generateRefreshToken = async (user) => {
+//   try {
+//     return jwt.sign(user, "my_admin_key_token", { expiresIn: "1y" });
+//   } catch (error) {
+//     console.error("Error generating token:", error);
+//     throw new Error("Token generation failed");
+//   }
+// };
 
 
 const adminLogin = async (req, res) => {
   try {
-
+ 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(200).json({
@@ -41,16 +42,16 @@ const adminLogin = async (req, res) => {
         errors: errors.array(),
       });
     }
-    const { email, password } = req.body;
-    const userData = await User.findOne({ email: email, isAdmin: 1 });
 
+    const { email, password } = req.body;
+
+    const userData = await User.findOne({ email: email, isAdmin: 1 });
     if (!userData) {
       return res
         .status(200)
         .json({ success: false, message: "No user found " });
     }
 
- 
     const isPasswordValid = await bcrypt.compare(password, userData.password);
 
     if (!isPasswordValid) {
@@ -59,16 +60,9 @@ const adminLogin = async (req, res) => {
         .json({ success: false, message: "Incorrect password" });
     }
 
-    const accessToken = await generateAccessToken({
-      userData: userData._id,
-    });
-
-
-    const refreshToken = await generateRefreshToken({
-      userData: userData,
-    });
-    
-    return res.status(200).json({ success: true, accessToken, refreshToken });
+   const adminToken = await generateAdminTocken({ user: userData._id });
+   
+    return res.status(200).json({ success: true, admin:adminToken });
 
   } catch (error) {
     console.error("Error during login:", error.message);
@@ -79,9 +73,8 @@ const adminLogin = async (req, res) => {
 
  const admindashboard =async(req,res)=>{
    try {
-
-     const usersList =await User.find();
-     res.status(200).json({ status: true, usersList });
+     const usersList =await User.find({});
+    return  res.status(200).json({ status: true, usersList });
    } catch (error) {
     console.log(error.message);
    }
@@ -95,8 +88,6 @@ const adminLogin = async (req, res) => {
       const adminId = req.params.adminId;
       console.log(adminId,'pppppppppppppppp');
 
-
-      
     } catch (error) {
        console.log(error.message);
     }
@@ -182,7 +173,25 @@ const adminLogin = async (req, res) => {
     }
    }
 
-
+const blockUser = async (req, res) => {
+  try {
+    const updateUser = await User.findByIdAndUpdate(
+      req.params.blockid,
+      { isBlocked: true },
+    );
+    if (!updateUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({ success: true, user: updateUser });
+  } catch (error) {
+    console.error(error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
 
 
 
@@ -197,5 +206,6 @@ module.exports = {
   valueadmindashboard,
   getUserById,
   updateUser,
-  deleteAdminid
+  deleteAdminid,
+  blockUser,
 };

@@ -11,6 +11,7 @@ const {
   updateUser,
   deleteUserid,
   deleteAdminid,
+  blockUser,
 } = require("../Controllers/AdminController");
 const { AdminloginValidation, editAdminuserValidator } = require("../helper/validation");
  
@@ -42,25 +43,20 @@ const upload = multer({ storage: storage });
 
 // Define routes
 router.post("/adminLoginpage", AdminloginValidation, adminLogin);
-router.get("/admindashboard", admindashboard);
+router.get("/admindashboardget", admindashboard);
 // router.post("/editAdminUser", upload.single("pic"), editadmindashboard);
-
-
-
-const UserController = require("../Controllers/userController");
 
 // Get user data for editing
 router.get("/getAdminUser/:id", getUserById);
-
-
-
-// Update user data
+// Update user data 
 router.post("/editAdminUser/:id", upload.single("pic"),editAdminuserValidator, updateUser);
-router.post("/deleteAdmin/:id", deleteUserid);
+router.post("/deleteUser/:id", deleteUserid);
+
+router.post("/blockUser/:blockid",blockUser);
 router.get("/adminlogout",deleteAdminid);
 
 module.exports = router;
 
 
 
-module.exports = router;
+
