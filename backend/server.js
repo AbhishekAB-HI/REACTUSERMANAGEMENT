@@ -1,17 +1,32 @@
+const express = require("express");
+const dotenv = require("dotenv");
+const path = require("path");
+const cors = require("cors");
 
-const express=require("express");
+const userRoutes = require("../backend/Routes/userRouter");
+const adminRoutes = require("../backend/Routes/adminRoutes");
+const Connectdb = require("../backend/configs/db");
+const cookieParser = require("cookie-parser");
 
-const app=express();
-const dotenv=require("dotenv");
+dotenv.config();
 
-  dotenv.config()
+Connectdb();
+const app = express();
 
-// create server
+app.use(cors());
+app.use(express.json());
 
- app.get("/",(req,res)=>{
-    res.send("api is send")
- })
+app.use(cookieParser())
 
- const PORT =process.env.PORT || 5000 
+app.get("/", (req, res) => {
+  res.send("API is running");
+});
 
-app.listen(PORT, console.log("Server start at port 5000"));
+app.use("/api/user", userRoutes);
+app.use("/api/admin", adminRoutes);
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
