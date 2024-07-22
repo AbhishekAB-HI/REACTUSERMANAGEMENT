@@ -15,6 +15,7 @@ const upload = multer({ storage: storage });
 const registerUser = asyncHandler(async (req, res) => {
   try{
 
+  
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(200).json({
@@ -26,6 +27,9 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
   const { name, email, password } = req.body;
+
+ 
+
   const userExist = await User.findOne({ email });
 
   if (userExist) {
@@ -34,6 +38,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const hashpassword = await bcrypt.hash(password, 10);
   let profilePicUrl = null;
   const result = await cloudinary.uploader.upload(req.file.path);
+
   const user = new User({
     name: name,
     email: email,
@@ -104,6 +109,8 @@ const authUser = asyncHandler(async (req, res) => {
       .json({ success: false, message: "Invalid Username or Password" });
   }
   const accessToken = await generateTocken({ user: user._id });
+
+   console.log(accessToken,"tocken here");
   res.status(200).json({ success: true,accessToken,userDetails: user});
       
     } catch (error) {
@@ -180,6 +187,22 @@ const editProfile = async (req, res) => {
 
  }
 
+  const CheckuserExist = async(req, res) => {
+    try {
+ 
+     const userid = req.user._id || "";
+     console.log(userid,'user id get ');
+     const userData = await User.findOne({ _id: userid });
+    if (userData) {
+      return res.status(200).json({ success: true });
+    } else {
+      return res.status(200).json({ success: false });
+    }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
 
 
 
@@ -187,8 +210,8 @@ const editProfile = async (req, res) => {
 module.exports = {
   registerUser,
   authUser,
-  userProfile, 
+  userProfile,
   editProfile,
   userLogout,
- 
+  CheckuserExist,
 };

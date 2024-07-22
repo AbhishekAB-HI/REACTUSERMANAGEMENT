@@ -45,6 +45,8 @@ const adminLogin = async (req, res) => {
 
     const { email, password } = req.body;
 
+  
+
     const userData = await User.findOne({ email: email, isAdmin: 1 });
     if (!userData) {
       return res
@@ -61,8 +63,11 @@ const adminLogin = async (req, res) => {
     }
 
    const adminToken = await generateAdminTocken({ user: userData._id });
+     const usersLists = await User.find({});
    
-    return res.status(200).json({ success: true, admin:adminToken });
+    return res
+      .status(200)
+      .json({ success: true, admin: adminToken, userList: usersLists });
 
   } catch (error) {
     console.error("Error during login:", error.message);
@@ -151,10 +156,7 @@ const adminLogin = async (req, res) => {
 
   const deleteUserid=async(req,res)=>{
     try {
-
-       console.log("ooooooooooooooooooo");
       const user = await User.findByIdAndDelete(req.params.id);
-      console.log(user,'llllllllllllllllllllllll');
       if(user){
       return  res.status(200).json({success:true})
       }else{
@@ -175,10 +177,28 @@ const adminLogin = async (req, res) => {
 
 const blockUser = async (req, res) => {
   try {
-    const updateUser = await User.findByIdAndUpdate(
-      req.params.blockid,
-      { isBlocked: true },
-    );
+    const updateUser = await User.findByIdAndUpdate(req.params.blockid, {
+      isBlocked: true,
+    });
+    if (!updateUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({ success: true, user: updateUser });
+  } catch (error) {
+    console.error(error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+const unblockUser = async (req, res) => {
+  try {
+    const updateUser = await User.findByIdAndUpdate(req.params.blockid, {
+      isBlocked: false,
+    });
     if (!updateUser) {
       return res
         .status(404)
@@ -198,7 +218,6 @@ const blockUser = async (req, res) => {
 
 
 
-
 module.exports = {
   adminLogin,
   admindashboard,
@@ -208,4 +227,5 @@ module.exports = {
   updateUser,
   deleteAdminid,
   blockUser,
+  unblockUser,
 };
